@@ -1,0 +1,37 @@
+---
+layout: default
+title: D-Link DIR-300/600 tips and tricks
+---
+<h1>{{ page.title }}</h1>
+<h2>Upgrading a DIR-300 B5 to a DIR-600 B5</h2>
+<p>
+	DIR-300 B5 and DIR-600 B5 have the same hardware. This means that a
+	DIR-300 B5 can be flashed with the firmware for DIR-600 B5 and gain
+	support for 802.11n.
+</p>
+<p>
+	In order to flash a DIR-300 B5 with the firmware for DIR-600 B5,
+	the DIR-300 must be booted in emergency mode: disconnect the power
+	supply from the router and hold reset while reconnecting the power
+	supply. After boot, a web page will be accessible on
+	<a href="http://192.168.0.1">192.168.0.1</a> on any of the router
+	ports. This web page allows uploading of any firmware.
+</p>
+<h2>Hidden configuration pages</h2>
+<p>
+	On both DIR-300 and DIR-600 there exist at least two hidden web pages
+	which exposes a couple of extra settings:
+</p>
+<ul>
+	<li><a href="http://192.168.0.1/bsc_wlan_wifitest.php"
+			>bsc_wlan_wifitest.php</a></li>
+	<li><a href="http://192.168.0.1/adv_wlan_wifitest.php"
+			>adv_wlan_wifitest.php</a></li>
+</ul>
+<h2>Extracting plain text XML from <i>config.bin</i></h2>
+<p>
+	The file <i>config.bin</i> which is downloaded using
+	<q>Save Settings To Local Hard Drive</q> contains a gzipped XML
+	configuration starting at byte 0x68.
+</p>
+<p><kbd>dd if=config.bin bs=1 skip=104 | zcat > config.xml</kbd></p>

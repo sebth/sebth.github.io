@@ -1,0 +1,31 @@
+body {
+	color: #000;
+	background-color: #d5d0cb;
+	font-family: serif;
+}
+
+div#content {
+	background-color: #fff;
+	width: 50em;
+	margin: 1em;
+	padding: 1em 2em 2.5em 2em;
+	border: 0.1em solid #aeaaa6;
+	border-radius: 1em;
+	box-shadow: 0 0 0.25em #aaa;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: sans-serif;
+}
+
+a {
+	color: #00a;
+}
+
+a:visited {
+	color: #606;
+}
+
+a:active {
+	color: #a00;
+}

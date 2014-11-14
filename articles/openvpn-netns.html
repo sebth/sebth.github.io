@@ -1,0 +1,51 @@
+---
+layout: default
+title: Running a OpenVPN tunnel inside a network namespace
+---
+<h1>{{ page.title }}</h1>
+<p>
+	Linux network namespaces can be used to control which processes should
+	be tunneled by OpenVPN.
+</p>
+
+<h2>Example</h2>
+<p>
+	First create an <i>--up</i> script for OpenVPN. This script will create
+	the VPN tunnel interface inside a network namespace called <i>vpn</i>,
+	instead of the default namespace.
+</p>
+<pre><b><kbd>cat &gt; netns-up &lt;&lt; EOF</kbd></b><code>
+#!/bin/sh
+case $script_type in
+        up)
+                ip netns add vpn
+                ip netns exec vpn ip link set dev lo up
+                ip link set dev "$1" up netns vpn mtu "$2"
+                ip netns exec vpn ip addr add dev "$1" \
+                        "$4/${ifconfig_netmask:-30}" \
+                        ${ifconfig_broadcast:+broadcast "$ifconfig_broadcast"}
+                test -n "$ifconfig_ipv6_local" &amp;&amp; \
+			ip netns exec vpn ip addr add dev "$1" \
+                        "$ifconfig_ipv6_local"/112
+                ;;
+        route-up)
+                ip netns exec vpn ip route add default via "$route_vpn_gateway"
+                test -n "$ifconfig_ipv6_remote" &amp;&amp; \
+			ip netns exec vpn ip route add default via \
+                        "$ifconfig_ipv6_remote"
+                ;;
+        down)
+                ip netns delete vpn
+                ;;
+esac
+</code><b><kbd>EOF</kbd></b></pre>
+<p>
+	Then start OpenVPN and tell it to use our <i>--up</i> script instead of
+	executing ifconfig and route.
+</p>
+<p><b><kbd>
+	openvpn --ifconfig-noexec --route-noexec --up netns-up
+	--route-up netns-up
+</kbd></b><br></p>
+<p>Now you can start programs to be tunneled like this:</p>
+<p><b><kbd>ip netns exec vpn <i>command</i></kbd></b></p>
