@@ -1,8 +1,9 @@
 ---
 layout: default
-title: Running a OpenVPN tunnel inside a network namespace
+title: Running an OpenVPN tunnel inside a network namespace
 ---
 <h1>{{ page.title }}</h1>
+<p><small><i>Updated <time>2016-09-10</time>.</i></small></p>
 <p>
 	Linux network namespaces can be used to control which processes should
 	be tunneled by OpenVPN.
@@ -10,11 +11,12 @@ title: Running a OpenVPN tunnel inside a network namespace
 
 <h2>Example</h2>
 <p>
-	First create an <i>--up</i> script for OpenVPN. This script will create
-	the VPN tunnel interface inside a network namespace called <i>vpn</i>,
-	instead of the default namespace.
+	First create an <i>--up</i> and <i>--down</i> script for OpenVPN. This
+	script will create the VPN tunnel interface inside a network namespace
+	called <i>vpn</i>, instead of the default namespace.
+
 </p>
-<pre><b><kbd>cat &gt; netns-up &lt;&lt; EOF</kbd></b><code>
+<pre><b><kbd>cat &gt; netns-script &lt;&lt; 'EOF'</kbd></b><code>
 #!/bin/sh
 case $script_type in
         up)
@@ -24,15 +26,17 @@ case $script_type in
                 ip netns exec vpn ip addr add dev "$1" \
                         "$4/${ifconfig_netmask:-30}" \
                         ${ifconfig_broadcast:+broadcast "$ifconfig_broadcast"}
-                test -n "$ifconfig_ipv6_local" &amp;&amp; \
-			ip netns exec vpn ip addr add dev "$1" \
-                        "$ifconfig_ipv6_local"/112
+                if [ -n "$ifconfig_ipv6_local" ]; then
+                        ip netns exec vpn ip addr add dev "$1" \
+                                "$ifconfig_ipv6_local"/112
+                fi
                 ;;
         route-up)
                 ip netns exec vpn ip route add default via "$route_vpn_gateway"
-                test -n "$ifconfig_ipv6_remote" &amp;&amp; \
-			ip netns exec vpn ip route add default via \
-                        "$ifconfig_ipv6_remote"
+                if [ -n "$ifconfig_ipv6_remote" ]; then
+                        ip netns exec vpn ip route add default via \
+                                "$ifconfig_ipv6_remote"
+                fi
                 ;;
         down)
                 ip netns delete vpn
@@ -40,12 +44,12 @@ case $script_type in
 esac
 </code><b><kbd>EOF</kbd></b></pre>
 <p>
-	Then start OpenVPN and tell it to use our <i>--up</i> script instead of
-	executing ifconfig and route.
+	Then start OpenVPN and tell it to use our <i>--up</i> and <i>--down</i>
+	script instead of executing ifconfig and route.
 </p>
 <p><b><kbd>
-	openvpn --ifconfig-noexec --route-noexec --up netns-up
-	--route-up netns-up
+	openvpn --ifconfig-noexec --route-noexec --up netns-script
+	--route-up netns-script --down netns-script
 </kbd></b><br></p>
 <p>Now you can start programs to be tunneled like this:</p>
 <p><b><kbd>ip netns exec vpn <i>command</i></kbd></b></p>
